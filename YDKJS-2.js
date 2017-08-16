@@ -33,9 +33,8 @@ function foo(a) {
 
 var b = 2;
 foo(2);
-/*
-The RHS reference for "b" searches first within the scope of "foo" and when it is not found moves onto the next scope, the global scope, where the variable and its value are found.
-*/
+
+// The RHS reference for "b" searches first within the scope of "foo" and when it is not found moves onto the next scope, the global scope, where the variable and its value are found.
 
 // Errors
 function foo(a) {
@@ -44,9 +43,8 @@ function foo(a) {
 }
 
 foo(2);
-/*
-The RHS reference for "b" will not be found in the function scope or the global scope and this results in a "ReferenceError" thrown by the Engine.
-*/
+
+// The RHS reference for "b" will not be found in the function scope or the global scope and this results in a "ReferenceError" thrown by the Engine.
 
 // Chapter 2: Lexical Scope
 // Lex-time
@@ -70,6 +68,7 @@ As "bar" is executed, the Engine looks for "a" and "b" which are found in the "f
 */
 
 // Cheating Lexical
+// eval()
 function foo(str, a) {
     eval(str);              // cheating!
     console.log(a, b);
@@ -81,8 +80,9 @@ foo("var b = 3;", 1);       // 1, 3 insterad of 1, 2
 
 // The lexical scope is modified by the eval() function. When console.log() is performed, the variable b is found within the scope of "foo" instead of the global variable where it was initially declared.
 
+// with
 function foo(obj) {
-    with (obj) {
+    with (obj) {        // with method
         a = 2;
     }
 }
@@ -103,3 +103,232 @@ console.log(o2.a)   // undefined
 console.log(a);     // 2 -- a leaked global variable
 
 // The "with" method is used for making multiple property references against an object. Function "foo" takes an object and assigns the property "a" the value of "2". "o1" has a property "a" so the value is set to "2". When the function is run on "o2", the property "a" is nowhere to be found and therefore a new variable "a" is automatically created in the global scope.
+
+// Chapter 3: Function vs. Block Scope
+// Scope from Functions
+function foo(a) {
+    var b = 2;
+    // some code
+    function bar () {
+        // some code
+    }
+    // more code
+    var c = 3;
+}
+
+bar();  // ReferenceError
+console.log(a, b, c)    // ReferenceError on all three
+// "a", "b", "c" and "bar" are all within the scope of "foo". "foo", in turn is located in the global scope.
+
+function doSomething(a) {
+    b = a + doSomethingElse(a * 2);
+
+    console.log(b * 3);
+}
+
+function doSomethingElse(a) {
+    return a - 1;
+}
+
+var b;
+doSomething(2);     // 15
+// "doSomethingElse" and "b" are likely private details of how "doSomething" works. Therefore both should be enclosed within the scope of "doSomething" as follows:
+function doSomething(a) {
+    function doSomethingElse(a) {
+        return a - 1;
+    }
+    var b;
+
+    b = a + doSomethingElse(a * 2);
+
+    console.log(b * 3);
+}
+
+doSomething(2);     // 15
+
+// Collision Avoidance
+function foo() {
+    function bar(a) {
+        i = 3;  // changes the "i" in the enclosing scope's for-loop
+        console.log(a + i);
+    }
+
+    for (var i = 0; i < 10; i++) {
+        bar(i * 2);     // infinite loop!
+    }
+}
+
+foo();
+// The problem would be solved if "i" would be declared as a local variable inside "bar": "var i = 3". Or if a another name would be used: "var j = 3".
+
+// Functions As Scopes
+// Hide any variable or function declarations from the outer scope by wrapping a function around it. In this case, "foo":
+var a = 2;
+
+function foo() {
+    var a = 3;
+    console.log(a); // 3
+}
+foo();
+console.log(a);     // 2
+// This is not ideal because the extra identifier name, "foo" pollutes the global scope and we need to execute the function. Instead we use a function expression so the name "foo" is found only within the function and it executes automatically:
+var a = 2;
+
+(function foo() {
+    var a = 3;
+    console.log(a); // 3
+})();
+
+console.log(a);     // 2
+
+// Anonymous vs. Named
+setTimeout( function(){     // Anonymous function expression
+    console.log("I waited 1 second!");
+}, 1000);
+
+setTimeout(function timeoutHandler(){   // Now the function has a name
+    console.log("I waited 1 second!");
+}, 1000);
+
+// Invoking Function Expressions Immediately
+// IIFE (Immediately Invoked Function Expression)
+var a = 2;
+
+(function foo(){
+    var a = 3;
+    console.log(a); // 3
+})();               // function is invoked immediately
+console.log(a);     // 2
+
+// An IIFE with arguments
+var a = 2;
+
+(function IIFE(global){
+    var a = 3;
+    console.log(a);         // 3
+    console.log(global.a);  // 2
+})(window);
+
+console.log(a);     // 2
+
+// A case where the function to be executed is defined after it has been invoked and the parameters passed.
+var a = 2;
+
+(function IIFE(def){
+    def(window);
+})(function def(global){
+    var a = 3;
+    console.log(a);         // 3
+    console.log(global.a);  // 2
+});
+
+// Blocks As Scopes
+// Simple example of block scope
+for (var i = 0; i < 10; i++) {
+    console.log(i);
+}
+// Variable "i" is used soley within the context of the for-loop.
+// try/catch
+try {
+    undefined();    // illegal operation to force an exception!
+}
+catch (err) {
+    console.log(err);   // works
+}
+
+console.log(err);   // ReferenceError
+// "err" exists only in the "catch" clause
+
+// let
+// The "let" keyword attaches the variable declaration to the scope of the block it finds itself in.
+var foo = true;
+
+if (foo) {
+    {   // Explicit block for "let" to bind to.
+        let bar = foo * 2;
+        bar = something(bar);
+        console.log(bar);
+    }
+}
+
+console.log(bar);   // ReferenceError
+
+// Garbage Collection
+function process(data) {
+    // do something
+}
+var someReallyBigData = { .. };
+process(someReallyBigData);
+var btn = document.getElementById("my_button");
+btn.addEventListener("click", function click(evt){
+    console.log("button clicked");
+}, /*capturingPhase=;*/false);
+// The JS engine runs "process" and keeps the result saved during the entire "click" function.
+
+function process(data) {
+    // do something
+}
+
+{
+    let someReallyBigData = { .. };
+    process(someReallyBigData);
+}
+
+var btn = document.getElementById("my_button");
+btn.addEventListener("click", function click(evt){
+    console.log("button clicked");
+}, /*capturingPhase=;*/false);
+// By creating a block and using the "let" keyword, we are able to dump the entire block of code after it has been used.
+
+// let Loops
+for (let i = 0; i < 10; i++) {
+    console.log(i);
+}
+
+console.log(i);     // ReferenceError
+// Variable "i" is only accessible in the for-loop.
+
+{
+    let j;
+    for (j = 0; j < 10; j++) {
+        let i = j;      // re-bound for each iteration
+        console.log(i);
+    }
+}
+// The "let" keyword reassigns the value for "i" in each iteration.
+
+// Careful when replacing "var" with "let" during the refactoring of code. "let" binds to single blocks and is not seen in any other scope.
+var foo = true, baz = 10;
+
+if (foo) {
+    var /*let*/ bar = 3;
+    if (baz > bar) {
+        console.log(baz);
+    }
+    // ...
+}
+// Above code refactored:
+var foo = true, baz = 10;
+
+if (foo) {
+    var /*let*/ bar = 3;
+    // ...
+}
+
+if (baz > bar) {
+    /*let bar = 3*/     // The declaration has to come with.
+    console.log(baz);
+}
+
+// const
+// const creates a block-scoped varaible but the value is fixed and any attempt to change the value at a later time will throw and error.
+var foo = true;
+if (foo) {
+    var a = 2;
+    const b = 3;    // block-scoped to the "if"
+
+    a = 3;
+    b = 4;          // error
+}
+console.log(a);     // 3
+console.log(b);     // ReferenceError
