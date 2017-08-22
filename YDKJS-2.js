@@ -332,3 +332,158 @@ if (foo) {
 }
 console.log(a);     // 3
 console.log(b);     // ReferenceError
+
+// Chapter 4: Hoisting
+// Declaration comes before assignment. The declaration is hoisted to the top of the code when it is compiled.
+a = 2;
+var a;
+console.log(a);     // This yields "2"
+// The above code compiled:
+var a;
+a = 2;
+console.log(a);
+
+// Another example:
+console.log(a);     // Returns "undefined"
+var a = 2;
+// Compiled:
+var a;
+console.log(a);
+a = 2;
+
+// Hoisting happens within the scope.
+foo ();
+function foo() {
+    console.log(a);
+    var a = 2;
+}
+// Compiled:
+function foo() {        // Declaration of "foo" hoisted
+    var a;              // Declaration of "a" hoisted to the top of its scope.
+    console.log(a);     // undefined
+    a = 2;
+}
+foo();
+
+// Function expressions are not hoisted.
+foo();      // TypeError
+bar();      // ReferenceError
+var foo = function bar() {
+    // ...
+}
+// Compiled:
+var foo;
+foo();      // TypeError
+bar();      // ReferenceError
+foo = function bar() {
+    // ...
+}
+
+// Functions are hoisted first, then variables.
+foo();      // 1
+var foo;
+function foo() {
+    console.log(1);
+}
+foo = function() {
+    console.log(2);
+};
+// Compiled:
+function foo() {
+    console.log(1);
+}
+foo();      // 1
+foo = function() {
+    console.log(2);
+};
+// The variable declaration "foo" was ignored because it was a dupicate of the function declaration.
+
+// Subsequent function declarations override previous declarations.
+foo();      // 3
+function foo() {
+    console.log(1);
+}
+var foo = function() {
+    console.log(2);
+};
+function foo() {
+    console.log(3);
+}
+// Compiled:
+function foo() {
+    console.log(1);
+}
+function foo() {
+    console.log(3);
+}
+foo();      // 3
+foo = function() {
+    console.log(2);
+};
+
+// Chapter 5: Scope Closure
+// Closure is when a function is able to remember and access its lexical scope even when that function is executing outside its lexical scope.
+function foo() {
+    var a = 2;
+    function bar() {
+        console.log(a);     // 2
+    }
+    bar();
+}
+foo();
+
+function foo() {
+    var a = 2;
+    function bar() {
+        console.log(a);
+    }
+    return bar;
+}
+var baz = foo();
+baz();      // 2 (Closure at work)
+
+var fn;
+function foo() {
+    var a = 2;
+    function baz() {
+        console.log(a);
+    }
+    fn = baz;       // Assign "baz" to global variable
+}
+function bar(fn) {
+    fn();       // Closure
+}
+foo();
+bar();      // 2
+
+function wait(message) {
+    setTimeout( function timer() {
+        console.log(message);
+    }, 1000);
+}
+wait("Hello, closure!");
+
+function setupBot(name, selector) {
+    $(selector).click( function activator() {
+        console.log("Activating: " + name);
+    });
+}
+setupBot("Closure Bot 1". "#bot_1");
+setupBot("Closure Bot 2". "#bot_2");
+
+// Closure seen in Loops
+for (var i = 1; i <= 5; i++) {
+    setTimeout( function timer(){
+        console.log(i);
+    }, i * 1000);
+}
+// Prints the number "6" five times.. This is due to the function "timer" is being run after the loop is finished and therefore prints the value of "i" at the end of the loop which is "6".
+for (var i = 1; i <= 5; i++) {
+    (function(){
+        var j = i;
+        setTimeout( function timer(){
+            console.log(j);
+        }, j * 1000);
+    })();
+}
+// An Immediately Invoking Function Expression is used to create new closured scope for each iteration of the the loop. The value for "i" is stored in a variable within the scope so that the callback function, "timer", can access the per iteration value of "i".
