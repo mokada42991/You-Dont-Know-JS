@@ -487,3 +487,70 @@ for (var i = 1; i <= 5; i++) {
     })();
 }
 // An Immediately Invoking Function Expression is used to create new closured scope for each iteration of the the loop. The value for "i" is stored in a variable within the scope so that the callback function, "timer", can access the per iteration value of "i".
+for (var i = 1; i <= 5; i++) {
+    let j = i;
+    setTimeout( function timer(){
+        console.log(j);
+    }, j * 1000);
+}
+// The "let" declaration creates a scope over the entire block while declaring a variable. An easier solution to using an IIFE.
+for (let i = 1; i <= 5; i++) {
+    setTimeout( function timer(){
+        console.log(i);
+    }, i * 1000);
+}
+// An even easier solution is by using "let" in the head of the for loop which means "i" is declared at each iteration of the loop.
+
+// Modules
+function CoolModule() {
+    var something = "cool";
+    var another = [1, 2, 3];
+    function doSomething() {
+        console.log(something);
+    }
+    function doAnother() {
+        console.log(another.join(" ! "));
+    }
+    return {
+        doSomething: doSomething,
+        doAnother: doAnother
+    };
+}
+var foo = CoolModule();
+foo.doSomething();      // cool
+foo.doAnother();        // 1 ! 2 ! 3
+// The module instance is created by invoking "CoolModule" via the variable "foo". The module returns an object which references the inner functions but keeps the inner variables hidden and private, essentially a public API for the module. The inner functions can be called by way of property references on the object returned (foo.doSomething()). These functions are called outside of their lexical scope but are able to access the inner variables from where they were created, an example of closure.
+function CoolModule(id) {
+    function identify() {
+        console.log(id);
+    }
+    return {
+        identify: identify
+    };
+}
+var foo1 = CoolModule("foo 1");
+var foo2 = CoolModule("foo 2");
+foo1.identify();    // "foo 1"
+foo2.identify();    // "foo 2"
+// A module can take parameters as shown above.
+function CoolModule(id) {
+    function change() {
+        publicAPI.identify = identify2;
+    }
+    function identify1() {
+        console.log(id);
+    }
+    function identify2() {
+        console.log(id.toUpperCase());
+    }
+    var publicAPI = {       // Object is named.
+        change: change,
+        identify: identify1
+    };
+    return publicAPI;
+}
+var foo = CoolModule("foo module");
+foo.identify();     // "foo module"
+foo.change();
+foo.identify();     // "FOO MODULE"
+// By naming the object that is being returned as the public API, the module instance is able to be modified from the inside.
