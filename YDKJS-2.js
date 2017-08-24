@@ -554,3 +554,47 @@ foo.identify();     // "foo module"
 foo.change();
 foo.identify();     // "FOO MODULE"
 // By naming the object that is being returned as the public API, the module instance is able to be modified from the inside.
+
+// An example of a module dependancy manager
+var MyModules = (function Manager() {
+    var modules = {};
+    function define(name, deps, impl) {
+        for (var i = 0; i < deps.length; i++) {
+            deps[i] = modules[deps[i]];
+        }
+        modules[name] = impl.apply(impl, deps);
+    }
+    function get(name) {
+        return modules[name];
+    }
+    return {
+        define: define,
+        get: get
+    };
+})();
+// Define a couple of modules.
+MyModules.define("bar", [], function(){
+    function hello(who) {
+        return "Let me introduce: " + who;
+    }
+    return {
+        hello: hello
+    };
+});
+MyModules.define("foo", ["bar"], function(bar){
+    var hungry = "hippo";
+    function awesome() {
+        console.log(bar.hello(hungry).toUpperCase());
+    }
+    return {
+        awesome: awesome
+    };
+});
+
+var bar = MyModules.get("bar");
+var foo = MyModules.get("foo");
+
+console.log(bar.hello("hippo"));    // Let me introduce: hippo
+foo.awesome();      // LET ME INTRODUCE: HIPPO
+// The "Manager" function is a module that returns an object with internal functions that can define/store modules in a list by name ("define") and invoke an instance of those modules ("get").
+// *** Closure is when a function can remember and access its lexical scope even when it's invoked outside its lexical scope. ***
