@@ -183,3 +183,61 @@ var obj = {
 };
 // forEach(function, context)
 [1, 2, 3].forEach(foo, obj);    // 1 awesome 2 awesome 3 awesome
+
+// "new" Binding
+function foo(a) {
+    this.a = a;
+}
+var bar = new foo(2);   // a new object "foo" is stored in "bar"
+console.log(bar.a);     // 2
+// By calling "foo()" with "new" in front of it, a new object is created and it is set as the "this" inside of "foo()".
+
+// Order of Binding
+function foo() {
+    console.log(this.a);
+}
+var obj1 = {
+    a: 2,
+    foo: foo
+};
+var obj2 = {
+    a: 3,
+    foo: foo
+}
+obj1.foo();     // 2
+obj2.foo();     // 3
+obj1.foo.call(obj2);    // 3
+obj2.foo.call(obj1):    // 2
+// Explicit binding comes before implicit binding.
+
+function foo(something) {
+    this.a = something;
+}
+var obj1 = {
+    foo: foo
+}
+var obj2 = {};
+obj1.foo(2);            // Sets "obj1.a" to "2"
+console.log(obj1.a);    // 2
+
+obj1.foo.call(obj2, 3); // Sets "obj2.a" to "3"
+console.log(obj2.a);    // 3
+
+var bar = new obj1.foo(4);  // The "new" binding precedes any implicit binding of "obj1" and creates a new object stored in "bar" with property "a" set to "4"
+console.log(obj1.a);    // 2
+console.log(bar.a);     // 4
+// "new" binding comes before implicit binding.
+
+function foo(something) {
+    this.a = something;
+}
+var obj1 = {};
+
+var bar = foo.bind(obj1);   // Hard binding "obj1" to the "foo" function in "bar"
+bar(2);     // Set the property "a" of "obj1" to "2"
+console.log(obj1.a);    // 2
+
+var baz = new bar(3);   // The "new" binding creates a new object stored in "baz" with a property "a" set to "3". "obj1" is no longer bound to the function "foo", "this" is now pointing to the newly created object "baz".
+console.log(obj1.a);    // 2
+console.log(baz.a);     // 3
+// The "new" binding overrides hard binding.
