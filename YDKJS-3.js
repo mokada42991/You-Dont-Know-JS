@@ -241,3 +241,40 @@ var baz = new bar(3);   // The "new" binding creates a new object stored in "baz
 console.log(obj1.a);    // 2
 console.log(baz.a);     // 3
 // The "new" binding overrides hard binding.
+
+function foo(p1, p2) {
+    this.val = p1 + p2;
+}
+var bar = foo.bind(null, "p1");
+var baz = new bar("p2");
+baz.val;    // p1p2
+// Another example of "new" binding overriding hard binding.
+
+/* Determining "this"
+1. Function is called with "new". "this" points to the newly constructed object. ("new" binding)
+    var bar = new foo()
+2. Function is called with ".call()" or ".apply()" or ."bind()". "this" points to the specified object. (explicit binding)
+    var bar = foo.call(obj1)
+    var bar = foo.bind(obj1)
+3. Function is called with a context. "this" points to that object. (implicit binding)
+    var bar = obj1.foo()
+4. Function is called plainly. "this" points to the global object. (default binding)
+    var bar = foo()
+*/
+
+// Lexical "this"
+// Arrow functions
+function foo() {
+    return (a) => {     // Arrow declaration
+        console.log(this.a);
+    };
+}
+var obj1 = {
+    a: 2
+};
+var obj2 = {
+    a: 3
+};
+var bar = foo.call(obj1);
+bar.call(obj2);     // 2, not 3
+// The "this" in the arrow function inside "foo()" is bound to "obj1" and can not be overridden, even with "new".
