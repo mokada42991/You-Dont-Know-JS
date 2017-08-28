@@ -57,7 +57,7 @@ for (i = 0; i < 10; i++) {
     if (i > 5) {
         foo.call(foo, i);   // By using ".call()" we make sure "this" is pointing at the function object "foo".
     }
-}
+}``
 console.log(foo.count);     // 4, correct
 // "this" is a binding that is made when a function is invoked. What it eventually references is determined by the call-site (how the function is called).
 
@@ -75,7 +75,8 @@ function bar() {
 }
 function foo() {
     // call-stack is: "baz" -> "bar" -> "foo" so the call-site is in "bar"
-    console.log("foo");
+-+
+``    console.log("foo");
 }
 baz();      // call-site for "baz"
 
@@ -278,3 +279,111 @@ var obj2 = {
 var bar = foo.call(obj1);
 bar.call(obj2);     // 2, not 3
 // The "this" in the arrow function inside "foo()" is bound to "obj1" and can not be overridden, even with "new".
+
+// Chapter 3: Objects
+// Literal syntax for an object:
+var myObj = {
+    key: value
+    // ...
+};
+// Constructed form:
+var myObj = new Object();
+myObj.key = value;
+// It is a common misconception that "everything in JavaScript is an object". This is clearly not true.
+
+/* There are 9 types of object sub-types also referred to as built-in objects.
+- String
+- Number
+- Boolean
+- Object
+- Function
+- Array
+- Date
+- RegExp
+- Error */
+var strPrimitive = "I am a string";
+typeof strPrimitive;                // "string"
+strPrimitive instanceof String;     // false
+
+var strObject = new String("I am a string");
+typeof strPrimitive;                // "string"
+strPrimitive instanceof String;     // true
+
+Object.prototype.toString.call(strObject);  // [object String]
+
+// The primitive value "I am a string" is not an object and to perform operations on it a "String" object is required. Luckily JavaScript coerces a "string" primitive to an object when necessary therefore the use of the literal form for a value is strongly preferred rather than the constructed object form.
+
+var strPrimitive = "I am a string";
+console.log(strPrimitive.length);   // 13
+console.log(strPrimitive.charAt(3));    // "m"
+// The enginve coerces the string primitive automatically into a "String" object so that the property/method access work. By contrast "Date" values can only be created with their constructed object form (using "new").
+
+var myObject = {
+    a: 2
+}
+myObject.a;     // 2 (Property access)
+myObject["a"];  // 2 (Key access)
+
+// Property or Key names are always strings. If any other value, including numbers, is used it will be converted to a string
+
+// ES6 allows for computed property names where an expression is specified in the key-name position.
+var prefix = "foo";
+var myObject = {
+    [prefix + "bar"]: "hello",
+    [prefix + "baz"]: "world"
+};
+myObject["foobar"];     // hello
+myObject["foobaz"];     // world
+
+// Arrays
+var myArray = ["foo", 42, "bar"];
+myArray.length;     // 3
+myArray[0];         // "foo"
+myArray[2];         // "bar"
+
+// Arrays are objects so you can technically also add properties onto an array but it is best to use arrays and objects for their intended use. Arrays store values at numeric indices, objects store key/value pairs.
+
+// Duplicating objects
+function anotherFunction() { /* ,,, */ }
+var anotherObject = {
+    c: true
+};
+var anotherArray = [];
+var myObject = {
+    a: 2,
+    b: anotherObject,
+    c: anotherArray,
+    d: anotherFunction
+};
+anotherArray.push(anotherObject, myObject);
+// If "myObject" were to be duplicated, an infinite circular duplication problem would occur because there are references to objects that reference back to "myObject".
+// ES6 has a built-in function that creates a "shallow copy" of an object. Object.assign() takes a target object as its first parameter and takes one or more souce objects as subsequent parameters:
+var newObj = Object.assign( {}, myObject );
+newObj.a;                       // 2
+newObj.b === anotherObject;     // true
+newObj.c === anotherArray;      // true
+newObj.d === anotherFunction;   // true
+
+// Property Descriptors
+var myObject = {
+    a: 2,
+}
+Object.getOwnPropertyDescriptor(myObject, "a");
+/*  {
+        value: 2,
+        writable: true,
+        enumerable: true,
+        configurable: true
+    }*/
+// The property descriptor of "a" has not only the value of 2 but also 3 other values. By using "Object.defineProperty()", you can add a new property, or modify an existing one with the desired characteristics:
+var myObject = {};
+Object.defineProperty(myObject, "a", {
+    value: 2,
+    writable: false,    // not writable
+    configurable: true,
+    enumerable: true
+});
+myObject.a = 3;
+myObject.a;     // 2
+// When "configurable" is changed to "false", the function "Object.defineProperty()" for that specific property will throw an error and that property can not be deleted.
+// When "enumerable" is set to "false", that property will not show up in certain object-property enumerations, such as a for-loop.
