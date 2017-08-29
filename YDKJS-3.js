@@ -387,3 +387,156 @@ myObject.a = 3;
 myObject.a;     // 2
 // When "configurable" is changed to "false", the function "Object.defineProperty()" for that specific property will throw an error and that property can not be deleted.
 // When "enumerable" is set to "false", that property will not show up in certain object-property enumerations, such as a for-loop.
+
+// Immutability
+// There are several ways to make properties or objects that cannot be changed.
+// Object Constant:
+var myObject = { };
+Object.defineProperty(myObject, "FAVORITE_NUMBER", {
+    value: 42,
+    writable: false,
+    configurable: false
+});
+// The property "FAVORITE_NUMBER" cannot but changed, redefined or deleted.
+// Prevent Extensions:
+var myObject = {
+    a: 2
+};
+Object.preventExtensions(myObject);
+myObject.b = 3;
+myObject.b;     // undefined
+// Prevents an object from having new properties added to it.
+// Seal: "Object.seal()" creates an object in which properties cannot be added and existing properties cannot be reconfigured or deleted. Values can still be modified.
+// Freeze: "Object.freeze()" takes an object and calls "Object.seal()" and makes it so that their values cannot be changed.
+
+// [[Get]]
+// When accessing a property of an object a [[Get]] operation is performed. The object is inspected for a property and if it exists, returns the value, and if it doesn't exist, returns "undefined" instead of a "ReferenceError".
+var myObject = {
+    a: undefined    // indistinguishable
+};
+myObject.a;     // undefined
+myObject.b;     // undefined
+
+// [[Put]]
+/* When setting a property of an object a [[Put]] operation is performed. It will check first if the property already exists, and if so:
+    1. Is the property an accessor descriptor? If so, call the setter, if any.
+    2. Is the property a data descriptor with "writable" of "false"? If so, fail.
+    3. Set the value to the existing property.
+*/
+
+// Getters & Setters
+// Getters are properties which call a hidden function to retrieve a value and setters are properties which call a hidden function to set a value.
+var myObject = {
+    get a() {       // define a getter for "a"
+        return 2;
+    }
+};
+Object.defineProperty(
+    myObject,       // target
+    "b",            // property name
+    {               // descriptor
+        // define a getter for "b"
+        get: function(){ return this.a * 2},
+        // make sure "b" shows up as a property
+        enumerable: true
+    }
+);
+myObject.a;     // 2
+myObject.b;     // 4
+// Two properties are created on "myObject" which do not hold a value but instead calls a function that returns a value when the property is accessed. These "getters" are hard coded and cannot be reset.
+
+var myObject = {
+    get a() {       // define a getter for "a"
+        return this._a_;
+    },
+    set a(val) {    // define a setter for "a"
+        this._a_ = val * 2;
+    }
+};
+myObject.a = 2;
+myObject.a;         // 4
+
+// Existence
+// Two ways we an check to see if a property exists inside of an object without asking to get the property's value:
+var myObject = {
+    a: 2
+};
+("a" in myObject);      // true
+("b" in myObject);      // false
+myObject.hasOwnProperty("a");   // true
+myObject.hasOwnProperty("b");   // false
+
+// Enumeration
+var myObject = { };
+Object.defineProperty(
+    myObject,
+    "a",
+    { enumerable: true, value: 2}
+);
+Object.defineProperty(
+    myObject,
+    "b",
+    { enumerable: false, value: 3}
+);
+myObject.b;         // 3
+("b" in myObject);  // true
+myObject.hasOwnProperty("b");   // true
+
+for (var k in myObject) {
+    console.log(k, myObject[k]);
+}   // "a" 2
+// When the property descriptor of "enumerable" is set to "false" the property will not appear when we iterate through that object.
+
+// Iteration
+// Standard "for" loop:
+var myArray = [1, 2, 3];
+for (var i = 0; i < myArray.length; i++) {
+    console.log(myArray[i]);
+}   // 1, 2, 3
+
+// Built-in functions: "forEach()" iterates over all values, "every()" iterates over values until the end or the callback returns a "false", "some()" keeps going until the end or the callback returns a "true".
+
+// A "for .. in" loop iterates over the properties in an object that are enumerable.
+
+// A "for .. of" loop iterates over the actual values and not the object properties.
+var myArray = [1, 2, 3];
+for (var v of myArray) {
+    console.log(v);
+}   // 1, 2, 3
+// The "for .. of" loop asks for an existing "iterator object" of the thing to be iterated and calls the "next()" method of the "iterator object" for each loop iteration.
+
+// A manual iteration through "myArray".
+var myArray = [1, 2, 3];
+var it = myArray[Symbol.iterator]();    // creates the "iterator object"
+it.next();  // { value: 1, done: false }
+it.next();  // { value: 2, done: false }
+it.next();  // { value: 3, done: false }
+it.next();  // { done: true }
+
+// Regular objects do not have an "iterator object" but we can manually create a "iterator property" for an object.
+var myObject = {
+    a: 2,
+    b: 3
+};
+Object.defineProperty(myObject, Symbol.iterator, {
+    enumerable: false,
+    writable: false,
+    configurable: true,
+    value: function() {
+        var o = this;               // myObject
+        var idx = 0;
+        var ks = Object.keys( o );  // ["a", "b"]
+        return {
+            next: function() {      // next()
+                return {
+                    value: o[ks[idx++]],    // myObject["a"] => 2
+                    done: (idx > ks.length) // 0 > 2 => false
+                };
+            }
+        };
+    }
+});
+var it = myObject[Symbol.iterator]();
+it.next();      // { value: 2, done: false }
+it.next();      // { value: 3, done: false }
+it.next();      // { value: undefined, done: true }
