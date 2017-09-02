@@ -540,3 +540,112 @@ var it = myObject[Symbol.iterator]();
 it.next();      // { value: 2, done: false }
 it.next();      // { value: 3, done: false }
 it.next();      // { value: undefined, done: true }
+
+// Chapter 4: Mixing (Up) "Class" Objects
+// Class -> Inheritance -> Instantiation
+// Polymorphism is the idea that a behavior from a parent class is overridden in a child class to give it more specifics.
+// JavaScript does not have actual classes. Classes in JavaScript are an optional pattern with syntax that looks like classes.
+
+// A class is a blue-print. To get an actual object we must "instantiate" something from the class. This results in an "instance", an object built in accordance to the class with all of its characteristics.
+// Instances of classes are built by a "constructor". This is a method of the class itself, usually with the same name as the class.
+class = CoolGuy {
+    specialTrick = nothing
+    CoolGuy(trick) {        // constructor
+        specialTrick = trick
+    }
+    showOff() {
+        output("Here's my trick: ", specialTrick)
+    }
+}
+Joe = new CoolGuy("jumping rope")   // constructor is called to instantiate a new "CoolGuy" instance called Joe with a parameter.
+Joe.showOff();  // Here's my trick: jumping rope
+
+// Class Inheritance
+// A "child class" is a class which inherits the behaviors of a second class, the "parent class". The "child" contains a copy of the behoviors from the "parent" but can override them or define new ones.
+// "Polymorphism" is the idea that any method can reference another method, of the same or different name, at a higher level of the inheritance hierarchy.
+class Vehicle {
+    engines = 1
+    ignition() {
+        output("Turning on my engine.")
+    }
+    drive() {
+        ignition()
+        output("Steering and moving forward!")
+    }
+}
+class Car inherits Vehicle {
+    wheels = 4
+    drive() {
+        inherited:drive()   // The original version of the method "drive()" from "Vehicle" is called. Polymorphism
+        output("Rolling on all ", wheels, " wheels!")
+    }
+}
+class SpeedBoat inherits Vehicle {
+    engines = 2
+    ignition() {
+        output("Turning on my ", engines, " engines.")
+    }
+    pilot() {
+        inherited:drive()   // The original version of "drive()" from "Vehicle" is called. The function "ignition()" which is in turn called by "drive()", is the "ignition()" found inside the class "SpeedBoat".
+        output("Speeding through the water with ease!")
+    }
+}
+
+// Mixins for JavaScript
+// A simplified constructor "mixin(..)" which copies the properties from a "parent" object to a "child" object. Remember there are no classes in JavaScript
+function mixin( sourceObj, targetObj ) {
+    for (var key in sourceObj) {
+        if (!(key in targetObj)) {
+            targetObj[key] = sourceObj[key];
+        }
+    }
+    return targetObj;
+}
+var Vehicle = {
+    engines : 1,
+    ignition: function() {
+        console.log("Turning on my engine.");
+    },
+    drive: function() {
+        this.ignition();
+        console.log("Steering and moving forward!");
+    }
+};
+var Car = mixin( Vehicle, {
+    wheels: 4,
+    drive: function() {
+        Vehicle.drive.call(this);
+        console.log("Rolling on all " + this.wheels + " wheels!");
+    }
+});
+
+// Parasitic Inheritance
+// JS Class: "Vehicle"
+function Vehicle() {
+    this.engines = 1;
+}
+Vehicle.prototype.ignition = function() {
+    console.log("Turning on my engine.");
+};
+Vehicle.prototype.drive = function() {
+    this.ignition();
+    console.log("Steering and moving forward!");
+};
+// Parasite Class: "Car"
+function Car() {
+    // New instance of Vehicle, "car"
+    var car = new Vehicle();
+    // Add a property
+    car.wheels = 4;
+    // Reference to Vehicle.drive()
+    var vehDrive = car.drive;
+    // Override Vehicle.drive()
+    car.drive = function() {
+        vehDrive.call(this);
+        console.log("Rolling on all " + this.wheels + " wheels!");
+    };
+    return car;
+}
+var myCar = new Car();
+myCar.drive();
+// Turning on my engine. Steering and moving forward! Rolling on all 4 wheels!
