@@ -649,3 +649,51 @@ function Car() {
 var myCar = new Car();
 myCar.drive();
 // Turning on my engine. Steering and moving forward! Rolling on all 4 wheels!
+
+// Chapter 5: Prototypes
+// [[Prototype]] is an internal property of objects which is simply a reference to another object.
+var anotherObject= {
+    a: 2
+};
+// an object linked to "anotherObject" is created
+var myObject = Object.create(anotherObject);
+myObject.a;     // 2
+// "myObject" is [[Prototype]] linked to "anotherObject". "myObject.a" doesn't exist but the [[Get]] operation keeps searching up the [[Prototype]] chain until the property is found or the chain ends (undefined).
+
+var anotherObject= {
+    a: 2
+};
+var myObject = Object.create(anotherObject);
+for(var k in myObject) {
+    console.log("found: " + k);
+}   // found: a
+("a" in myObject);  // true
+// The "for .. in" loop iterates not only over the properties found in "myObject" but any property that can be reached via its [[Prototype]] chain. Same goes for "in" operator.
+
+// Every [[Prototype]] chain ends with the built-in "Object.prototype".
+
+// When setting a property on an object:
+myObject.foo = "bar";
+/*
+    - If the property already exists in "myObject", the value is simply changed.
+    - If the property is nowhere to be found in "myObject" or the [[Prototype]] chain, the property is added to "myObject" with the specified value.
+*/
+/* Scenarios for when the property is not found in "myObject" but is present higher up on the [[Prototype]] chain.
+    - If the property found is not marked as "read-only" (writable: false), the new property is added to "myObject". This results in a "shadowed property".
+    - If the property found is marked as "read-only" (writable: false), the setting and creating of that property fails.
+    - If the property found is a "setter", the "setter" function will be called. No property will be added or redefined.
+*/
+
+// Example of implicit shadowing
+var anotherObject= {
+    a: 2
+};
+var myObject = Object.create(anotherObject);
+anotherObject.a;    // 2
+myObject.a;         // 2
+anotherObject.hasOwnProperty("a");  // true
+myObject.hasOwnProperty("a");       // false
+myObject.a++;       // (myObject.a =  myObject.a + 1) which results in "myObject.a" being defined as 3 which creates a shadowed property.
+anotherObject.a;    // 2
+myObject.a;         // 3
+myObject.hasOwnProperty("a");       // true
