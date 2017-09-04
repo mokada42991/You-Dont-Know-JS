@@ -697,3 +697,19 @@ myObject.a++;       // (myObject.a =  myObject.a + 1) which results in "myObject
 anotherObject.a;    // 2
 myObject.a;         // 3
 myObject.hasOwnProperty("a");       // true
+
+// "Class"
+// JavaScript does not have blueprints called "classes", it only has "objects". Unlike class-oriented languages where "instances" or copies are created according to the "class", JavaScript objects are only able to be [[Prototype]] linked. No form of copying is happening.
+// "Inheritance" is a concept only found in copy operations which JS does not have. Instead, an object is able to "delegate" properties/functions to another linked object.
+
+function Foo(name) {    // Foo.prototype object is created
+    this.name = name;
+}
+Foo.prototype.myName = function() {     // funtion "myName" is added to Foo.prototype
+    return this.name;
+};
+var a = new Foo("a");   // object "a" is created with a "name" property set to "a" and a [[Prototype]] link to "Foo".
+var b = new Foo("b");   // object "b" is created with a "name" property set to "b" and a [[Prototype]] link to "Foo".
+a.myName();     // "a"
+b.myName();     // "b"
+// "myName" is in not located in either object "a" or "b" but is found further up the prototype chain in the "Foo.prototype" object.
