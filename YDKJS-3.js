@@ -713,3 +713,267 @@ var b = new Foo("b");   // object "b" is created with a "name" property set to "
 a.myName();     // "a"
 b.myName();     // "b"
 // "myName" is in not located in either object "a" or "b" but is found further up the prototype chain in the "Foo.prototype" object.
+
+// Prototypal Inheritance
+function Foo(name) {
+    this.name = name;
+}
+Foo.prototype.myName = function() {
+    return this.name;
+}
+function Bar(name, label) {
+    Foo.call(this, name);
+    this.label = label;
+}
+// Creating a new object "Bar.prototype" that is linked to "Foo.protoype" using "Object.create()"
+Bar.prototype = Object.create(Foo.prototype);
+Bar.prototype.myLabel = function() {
+    return this.label;
+}
+var a = new Bar("a", "obj a");
+a.myName();     // "a"
+a.myLabel();    // "obj a"
+// Object "a" has access to "myName()" because it is prototype linked to "Foo.prototype"
+
+// Pre-ES6 which essentially creates a new object and throws away the original "Bar.prototype"
+Bar.prototype = Object.create(Foo.prototype);
+// ES6+ which modifies the existing "Bar.prototype" and avoids garbage collection
+Object.setPrototypeOf(Bar.prototype, Foo.prototype);
+
+// [[Prototype]] Reflection
+Foo.prototype.isPrototypeOf(a); // true
+// In the entire [[Prototype]] chain of "a", does "Foo.prototype" ever appear?
+
+Object.getPrototypeOf(a);
+// Retrieves the [[Prototype]] of an object.
+
+// Object Links
+var foo = {
+    something: function() {
+        console.log("Tell me something good...");
+    }
+};
+var bar = Object.create(foo);   // Object "bar" is created.
+bar.something();    // Tell me something good...
+
+// Object.create(object, [propertiesObject])
+var anotherObject = {
+    a: 2
+};
+var myObject = Object.create(anotherObject, {
+    b: {
+        enumerable: false,
+        writable: true,
+        configurable: false,
+        value: 3
+    },
+    c: {
+        enumerable: true,
+        writable: false,
+        configurable: false,
+        value: 4
+    }
+});
+myObject.hasOwnProperty("a");   // false
+myObject.hasOwnProperty("b");   // true
+myObject.hasOwnProperty("c");   // true
+myObject.a;     // 2
+myObject.b;     // 3
+myObject.c;     // 4
+
+// Chapter 6: Behavior Delegation
+// An object is defined that has various methods that child objects can delegate to.
+var Task = {
+    setID: function(ID) { this.id = ID; },
+    outputID: function() { console.log(this.id); }
+};
+// Another objet is defined that is [[Prototype]] linked to "Task".
+var XYZ = Object.create(Task);
+XYZ.prepareTask = function(ID, Label) {
+    // A method is called which is found in "Task" but "this" binding calls the function in relation to "XYZ".
+    this.setID(ID);
+    this.label = Label;
+};
+XYZ.outputTaskDetails = function() {
+    this.outputID();
+    console.log(this.label);
+};
+
+// OO (Object Oriented) vs OLOO (Objects Linked with Other Objects)
+// OO Version
+function Foo(who) {
+    this.me = who;
+}
+Foo.prototype.identify = function() {
+    return "I am " + this.me;
+}
+function Bar(who) {
+    Foo.call(this, who);
+}
+Bar.prototype = Object.create(Foo.prototype);
+Bar.prototype.speak = function() {
+    alert("Hello, " + this.identify() + ".");
+};
+var b1 = new Bar("b1");
+var b2 = new Bar("b2");
+b1.speak();
+b2.speak();
+// Parent class "Foo" is linked to child class "Bar". "b1" and "b2" are instances of "Bar".
+
+// OLOO version
+var Foo = {
+    init: function(who) {
+        this.me = who;
+    },
+    identify: function() {
+        return "I am " + this.me;
+    }
+};
+var Bar = Object.create(Foo);
+Bar.speak = function() {
+    alert("Hello, " + this.identify() + ".");
+};
+var b1 = Object.create(Bar);
+b1.init("b1");
+var b2 = Object.create(Bar);
+b2.init("b2");
+b1.speak();
+b2.speak();
+// This code has the exact same functionality as the OO code, just greaty simplified. Instead of having to deal with constructors and prototypes, the 3 objects are simply linked together.
+
+// Classes vs Objects
+// Widget "Classes"
+// Parent Class
+function Widget(width,height) {
+    this.width = width || 50;
+    this.height = height || 50;
+    this.$elem = null;
+}
+Widget.prototype.render = function($where) {
+    if (this.$elem) {
+        this.$elem.css( {
+            width: this.width + "px",
+            height: this.height + "px"
+        }).appendTo($where);
+    }
+};
+// Child Class
+function Button(width, height, label) {
+    Widget.call(this, width, height);
+    this.label = label || "Default";
+    this.$elem = $("<button>").text(this.label);
+}
+// make "Button" inherit from "Widget"
+Button.prototype = Object.create(Widget.prototype);
+// override base inherited "render(..)"
+Button.prototype.render = function($where) {
+    Widget.prototype.render.call(this, $where);
+    this.$elem.click(this.onClick.bind(this));
+};
+Button.prototype.onClick = function(evt) {
+    console.log("Button '" + this.label + "' clicked!");
+};
+$(document).ready(function(){
+    var $body = $(document.body);
+    var btn1 = new Button(125, 30, "Hello");
+    var btn2 = new Button(150, 40, "World");
+    btn1.render($body);
+    btn2.render($body);
+});
+// Terribly messy and complicated code.
+// OLOO version of Widget/Button
+var Widget = {
+    init: function(width, height) {
+        this.width = width || 50;
+        this.height = height || 50;
+        this.$elem = null;
+    },
+    insert: function($where) {
+        if (this.$elem) {
+            this.$elem.css( {
+                width: this.width + "px",
+                height: this.height + "px"
+            }).appendTo($where);
+        }
+    }
+};
+var Button = Object.create(Widget);
+Button.setup = function(width, height, label) {
+    this.init(width, height);
+    this.label = label || "Default";
+    this.$elem = $("<button>").text(this.label);
+};
+Button.build = function($where) {
+    this.insert($where);
+    this.$elem.click(this.onClick.bind(this));
+};
+Button.onClick = function(evt) {
+    console.log("Button '" + this.label + "' clicked!");
+}
+$(document).ready(function() {
+    var $body = $(document.body);
+    var btn1 = Object.create(Button);
+    btn1.setup(125, 30, "Hello");
+    var btn2 = Object.create(Button);
+    btn2.setup(150, 40, "World");
+    btn1.build($body);
+    btn2.build($body);
+});
+// Widget object is linked to the Button object, Button object has access to the Widget objects methods. Delegation pattern allows for simpler calls to methods (this.init(..)) and doesn't have any constructors (.prototype, new).
+
+// Login and Authentication Controllers
+var LoginController = {
+    errors: [],
+    getUser: function() {
+        return document.getElementById("login_username").value;
+    },
+    getPassword: function() {
+        document.getElementById("login_password").value;
+    },
+    validateEntry: function(user, pw) {
+        user = user || this.getUser();
+        pw = pw || this.getPassword();
+        if (!(user && pw)) {
+            return this.failure("Please enter a username & password!");
+        }
+        else if (pw.length < 5){
+            return this.failure("Password must be 5+ characters!");
+        }
+        return true;
+    },
+    showDialog: function(title, msg) {
+        // display success message
+    },
+    failure: function(err) {
+        this.errors.push(err);
+        this.showDialog("Error", "Login invalid: " + err);
+    }
+};
+// Link "AuthController" to delegate to "LoginController"
+var AuthController = Object.create(LoginController);
+AuthController.errors = [];
+AuthController.checkAuth = function() {
+    var user = this.getUser();
+    var pw = this.getPassword();
+    if (this.validateEntry(user, pw)) {
+        this.server("/check-auth", {
+            user: user,
+            pw: pw
+        })
+        .then(this.accepted.bind(this))
+        .fail(this.rejected.bind(this));
+    }
+};
+AuthController.server = function(url, data) {
+    return $ajax({
+        url: url,
+        data: data
+    });
+};
+AuthController.accepted = function() {
+    this.showDialog("Success", "Authenticated!")
+};
+AuthController.rejected = function(err) {
+    this.failure("Auth failed: " + err);
+};
+// A much simpler design using just two objects that are linked.
