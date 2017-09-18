@@ -133,3 +133,51 @@ c = a.split("").reverse().join("");
 c;      // "oof"
 
 // Numbers
+// JavaScript has just one numeric type: "number". This type includes both integer values and fractional decimal numbers.
+// Very large or very small numbers will by default be outputted in exponent form.
+var a = 5E10;
+a;      // 50000000000
+a.toExponential();  // "5e+10"
+var b = a * a;
+b;      // 2.5e+21
+var c = 1 / a;
+c;      // 2e-11
+// Number values are boxed with the "number" object wrapper and have access to buit in methods.
+var a = 42.59;
+a.toFixed( 0 );     // "43"
+a.toFixed( 1 );     // "42.6"
+a.toFixed( 2 );     // "42.59"
+a.toFixed( 3 );     // "42.590"
+a.toPrecision( 1 ); // "4e+1"
+a.toPrecision( 2 ); // "43"
+a.toPrecision( 3 ); // "42.6"
+a.toPrecision( 4 ); // "42.59"
+a.toPrecision( 5 ); // "42.590"
+
+// An infamous side effect of using binary floating-point numbers is:
+0.1 + 0.2 === 0.3;  // false
+// 0.1 + 0.2 actually yields 0.30000000000000004 which is not equal to 0.3. It is common practice to use a tiny "rounding error" value as the tolerance for comparison, in JS's case, "Number.EPSILON", a predifined value.
+function numbersCloseEnoughToEqual(n1, n2) {
+    return Math.abs(n1 - n2) < Number.EPSILON;
+}
+var a = 0.1 + 0.2;
+var b = 0.3;
+numbersCloseEnoughToEqual(a, b);    // true
+numbersCloseEnoughToEqual(0.0000001, 0.0000002);    // false
+// Integers in JavaScript have a max and min value. You can test for integers with the following:
+Number.isInteger( 42 );     // true
+Number.isInteger( 42.3 );   // false
+
+// Special Values
+/* For the "undefined" type, there is one and only one value: "undefined". Same goes for "null".
+- "null" is an empty value
+- "undefined" is a missing value */
+// The "void __ " expression sets the result of the expression to "undefined".
+function doSomething() {
+    if (!APP.ready) {
+        return void setTimeout( doSomething, 100 );
+    }
+    var result;
+    // do some other stuff
+    return result;
+}
