@@ -181,3 +181,101 @@ function doSomething() {
     // do some other stuff
     return result;
 }
+// Special numbers
+// "NaN" stands for not a number but is more of an invalid number or a failed number.
+var a = 2 / "foo"       // NaN
+typeof a === "number";  // true
+// You can test if a value is an "NaN":
+var a = 2 / "foo";
+isNaN( a );     // true
+// But it has a flaw:
+var b = "foo";
+isNaN( b );     // true
+// As of ES6 a new utility is available:
+Number.isNaN( a );  // true
+Number.isNaN( b );  // false
+// Polyfill for Number.isNaN:
+if (!Number.isNaN) {
+    Number.isNaN = function(n) {
+        return n !== n;     // NaN is the only value in JavaScript that is not equal to itself.
+    };
+}
+// Infinities
+// JS has finite numeric representations so any number larger than the MAX_VALUE is expressed as "Infinity".
+var a = Number.MAX_VALUE;   // 1.7976931348623157e+308
+a + a;                  // Infinity
+a + Math.pow(2,970);    // Infinity
+a + Math.pow(2,969);    // 1.7976931348623157e+308
+// Zeros
+// JS has a normal 0 and a negative 0 ( -0 ). It results from certain mathematic operations.
+var a = 0 / -3;     // -0
+var b = 0 * -3;     // -0
+// When converting a negative zero to a string, it returns a normal zero.
+a;                  // -0
+a.toString();       // "0"
+a + "";             // "0"
+String(a);          // "0"
+JSON.stringify(a);  // "0"
+// Comparison operators are configured to lie whether a value is a zero or a negative zero:
+var a = 0;
+var b = 0 / -3;
+a == b;         // true
+-0 == 0;        // true
+a === b;        // true
+-0 === 0;       // true
+0 > -0;         // false
+a > b;          // false
+// Distingushing a negative zero
+function isNegZero(n) {
+    n = Number(n);
+    return (n === 0) && (1 / n === -Infinity);
+}
+isNegZero(-0);      // true
+isNegZero(0 / -3);  // true
+isNegZero(0);       // false
+// As of ES6 there is a new utility that tests two values for absolute equality, "Object.is()".
+var a = 2 / "foo";
+var b = -3 * 0;
+Object.is(a, NaN);      // true
+Object.is(b, -0);       // true
+Object.is(b, 0);        // false
+// Polyfill
+if (!Object.is) {
+    Object.is = function(v1, v2) {
+        // test for negative zero
+        if (v1 === 0 && v2 === 0) {
+            return 1 / v1 === 1 / v2;
+        }
+        // test for NaN
+        if (v1 !== v1) {
+            return v2 !== v2;
+        }
+        // everything else
+        return v1 === v2;
+    }
+}
+// Value vs Reference
+var a = 2;
+var b = a;  // "b" is always a copy of the value in "a"
+b++;
+a;          // 2
+b;          // 3
+
+var c = [1, 2, 3];
+var d = c;  // "d" is a reference to the shared value
+d.push(4);
+c;          // [1, 2, 3, 4]
+d;          // [1, 2, 3, 4]
+// Simple values (null, undefined, string, number, boolean, symbol) are always assigned by "value-copy".
+// Compound values (objects including arrays and functions) always create a copy of the "reference" on assignment.
+function foo(x) {
+    x.push(4);
+    x;  // [1, 2, 3, 4]
+    // later
+    x = [4, 5, 6];
+    x.push(7);
+    x;  // [4, 5, 6, 7]
+}
+var a = [1, 2, 3];
+foo( a );
+a;      // [1, 2, 3, 4] not [4, 5, 6, 7]
