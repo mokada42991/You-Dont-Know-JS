@@ -279,3 +279,82 @@ function foo(x) {
 var a = [1, 2, 3];
 foo( a );
 a;      // [1, 2, 3, 4] not [4, 5, 6, 7]
+
+// Chapter 3: Natives
+/* There are various built-ins or "natives" in JS:
+- String()
+- Number()
+- Boolean()
+- Array()
+- Object()
+- Function()
+- RegExp()
+- Date()
+- Error()
+- Symbol() */
+var s = new String( "Hello World!" );
+console.log( s.toString() );    // "Hello World!"
+// The result of the constructor form of value creation "new String(...)" is an object wrapper around the primitive string.
+var a = new String( "abc" );
+typeof a;   // "object"
+a instanceof String;    // true
+Object.prototype.toString.call(a);  // "[object String]"
+console.log(a); // String {0: "a", 1: "b", 2: "c", length: 3, [[PrimitiveValue]]: "abc"}
+
+// Internal [[Class]]
+// Values that are "typeof" "object" are tagged with an internal [[Class]] property. This can be revealed with the following:
+Object.prototype.toString.call( [1, 2, 3] );    // "[object Array]"
+Object.prototype.toString.call( /regex-literal/i );    // "[object RegExp]"
+// Most cases this internal [[Class]] value corresponds to the built-in native constructor but not always (Null, Undefined).
+
+// Boxing Wrappers
+// Primitive values do not have properties or methods so JS automatically "boxes" the primitive values with an object wrapper.
+var a = "abc";
+a.length;   // 3
+a.toUpperCase();    // "ABC"
+// To "unbox" the object wrapper and get the primitive value out:
+var a = new String("abc");
+var b = new Number(42);
+var c = new Boolean(true);
+a.valueOf();    // "abc"
+b.valueOf();    // 42
+c.valueOf();    // true
+
+// For array, object, function and regular expression values it is universally preferred that you use the literal form for creating values and not with the constructor.
+// Empty slot arrays are a no-go, never ever intentionally create one.
+// There is also almost no reason to use the constructor form to create an object, function or reg-ex.
+var c = new Object();
+c.foo = "bar";
+c;  // { foo: "bar" }
+var d = { foo: "bar" };
+d;  // { foo: "bar" }
+
+var e = new Function( "a", "return a * 2" );
+var f = function(a) {  return a* 2 };
+function g(a) { return a * 2 }
+
+var h = new RegExp( "^a*b+", "g");
+var i = /^a*b+/g;
+
+// Date(..) and Error(..)
+// To create a date object value, "new Date()" is used. The constructor accepts arguments to specify the date/time used but if omitted, the current date/time is returned. Calling "getTime()" on the object returns the current timestamp value, a signed integer number of millisenconds since Jan 1, 1970. This is done easier with the built-in function, "Date.now()".
+if (!Date.now) {
+    Date.now = function() {
+        return (new Date()).getTime();
+    };
+}
+// The main reason you would want to create an error object is to capture the current execution stack in the object which makes finding the position of the error and debugging it easier.
+function foo(x) {
+    if (!x) {
+        throw new Error( "x wasn't provided" );
+    }
+    // ..
+}
+
+// Native Prototypes
+// Each built-in native constructor has its own ".prototype" object with its own default behaviors and methods.
+String.prototype.indexOf(..);
+String#charAt(..);
+String#substr(..); String#substring(..); String#slice(..);
+String#toUpperCase(..); String#toLowerCase(..);
+String#trim(..);
