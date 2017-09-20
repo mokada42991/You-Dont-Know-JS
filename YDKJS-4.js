@@ -358,3 +358,37 @@ String#charAt(..);
 String#substr(..); String#substring(..); String#slice(..);
 String#toUpperCase(..); String#toLowerCase(..);
 String#trim(..);
+
+// Chapter 4: Coercion
+// Two types of coercion, "implicit" and "explicit"
+var a = 42;
+var b = a + "";         // "42" Implicit
+var c = String( a );    // "42" Explicit
+// For "b" the coercion happens implicitly through the string concatenation which as a side effect, forces 42 to become a string. For "c" it is obvious that the value is being converted to a string with the constructor.
+
+// Abstract Value Operations
+// How a value becomes either a string, number or boolean.
+var a = 1.07 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000;
+a.toString();   // "1.07e21"
+var a = [1, 2, 3];
+a.toString();   // "1,2,3"
+// JSON Stringification
+JSON.stringify( 42 );   // "42"
+JSON.stringify( "42" );   // ""42""
+JSON.stringify( null );   // "null"
+// Values that are not JSON-safe will either be omitted or replaced.
+JSON.stringify( undefined );   // undefined
+JSON.stringify( function(){} );   // undefined
+JSON.stringify( [1,undefined,function(){},4] );   // "[1,null,null,4]"
+// IF an object has a toJSON() method, this will be called first to get a value for serialization.
+var o = { };
+var a = {
+    b: 42,
+    c: o,
+    d: function(){}
+};
+o.e = a;    // Would throw an error when converted to JSON.
+a.toJSON = function() { // toJSON() defined
+    return { b: this.b };
+};
+JSON.stringify( a );    // "{"b":42}"
