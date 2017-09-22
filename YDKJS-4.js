@@ -368,6 +368,7 @@ var c = String( a );    // "42" Explicit
 
 // Abstract Value Operations
 // How a value becomes either a string, number or boolean.
+// ToString
 var a = 1.07 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000;
 a.toString();   // "1.07e21"
 var a = [1, 2, 3];
@@ -392,3 +393,92 @@ a.toJSON = function() { // toJSON() defined
     return { b: this.b };
 };
 JSON.stringify( a );    // "{"b":42}"
+
+// JSON.stringify(..) has an optional second argument called "replacer". This can either be an array or a function.
+var a = {
+    b: 42,
+    c: "42",
+    d: [1,2,3]
+};
+JSON.stringify( a, ["b", "c"] );    // "{"b":42,"c":"42"}"
+JSON.stringify( a, function(k,v) {
+    if (k !== "c") return v;
+}); // "{"b":42."d":[1,2,3]}"
+// If "replacer" is an array, only the property names included in the array will be returned. If "replacer" is a function, it is called first on the object, then on each property in the object.
+// JSON.stringify(..) also takes a third argument, "space" which is used as indentation.
+var a = {
+    b: 42,
+    c: "42",
+    d: [1,2,3]
+};
+JSON.stringify( a, null, 3 );
+/*
+"{
+    "b": 42,
+    "c": "42",
+    "d": [
+        1,
+        2,
+        3
+    ]
+}"
+*/
+
+// ToNumber
+// "true" becomes "1", "false" becomes "0", "undefined" becomes "NaN", "null" becomes "0". A string works like the rules for numeric literals. Objects and arrays will be converted to their primitive value equivalent and this value is coerced to a number. The primitive value equivalent can be found either in the valueOf() method or toString() method of the object.
+var a = {
+    valueOf: function() {
+        return "42";
+    }
+};
+var b = {
+    toString: function() {
+        return "42";
+    }
+};
+var c = [4,2];
+c.toString = function() {
+    return this.join("");
+};
+Number( a );        // 42
+Number( b );        // 42
+Number( c );        // 42
+Number( "" );       // 0
+Number( [] );       // 0
+Number( "abc" );    // NaN
+
+// ToBoolean
+// "1" can be coerced to "true", "0" to "false" but the values are not the same.
+/* List of "falsy" values that will coerce to "false":
+    - undefined
+    - null
+    - false
+    - +0, -0, NaN
+    - ""
+*/
+// Anything not on this list is "truthy" including objects (with a small exception).
+var a = "false";
+var b = "0";
+var c = "''";
+var d = Boolean(a && b && c);   // true
+
+var a = [];
+var b = {};
+var c = function(){};
+var d = Boolean(a && b && c);   // true
+
+// Explicit Coercion
+// Strings <--> Numbers
+var a = 42;
+var b = String( a );
+var c = "3.14";
+var d = Number( c );
+b;  // "42"
+d;  // 3.14
+
+var a = 42;
+var b = a.toString();
+var c = "3.14";
+var d = +c;     // unary operator
+b;  // "42"
+d;  // 3.14
