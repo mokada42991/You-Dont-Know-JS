@@ -482,3 +482,48 @@ var c = "3.14";
 var d = +c;     // unary operator
 b;  // "42"
 d;  // 3.14
+
+// Coerce a "Date" object into a number, the unix timestamp (milliseconds elapsed since 1 January 1970).
+var d = new Date("Mon, 18 Aug 2014 08:53:06 CDT");
++d;     // 1408369...
+// Current timestamp
+var timestamp = +new Date();
+var timestamp = new Date().getTime();
+var timestamp = Date.now();     // As of ES5
+
+// Tilde Operator
+// "~", otherwise known as "bitwise NOT" coerces a value to a number then performs a bitwise negation.
+// ~x roughly equals -(x + 1);
+var a = "Hello World";
+if (a.indexOf( "lo" ) >= 0) {   // 3 >= 0 true
+    // found it
+}
+if (a.indexOf( "lo" ) != -1) {   // 3 != -1 true
+    // found it
+}
+if (a.indexOf( "ol" ) < 0) {   // -1 < 0 true
+    // not found
+}
+if (a.indexOf( "ol" ) == -1) {   // -1 == -1 true
+    // not found
+}
+// Using "~"
+~a.indexOf( "lo" );         // -4 -> truthy
+if (~a.indexOf( "lo" )) {   // true
+    // found it
+}
+~a.indexOf( "ol" );         // 0 -> falsy
+if (!~a.indexOf( "ol" )) {  // true
+    // not found
+}
+// "~" transforms the value of "-1" to a "0" which coerces to "false" and leaves all other values coercing to "true".
+// The double tilde "~~" can be used to truncate the decimal part of a number (coerce it to a whole number).
+
+// Parsing Numeric Strings
+var a = "42";
+var b = "42px";
+Number(a);      // 42
+parseInt(a);    // 42
+Number(b);      // NaN
+parseInt(b);    // 42
+// Parsing occurs from left to right and stops when it encounters a non-numeric character.
